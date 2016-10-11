@@ -1,15 +1,17 @@
 import React from 'react'
-import git from '../git.json'
+import { render } from 'react-dom'
+import git from './git.json'
+
+window.React = React
 
 class App extends React.Component {
 
   constructor (props) {
     super(props)
-    console.log(git.local)
     this.state = {
-      branch: git['local.branch.current.name'],
-      commit: git['local.branch.current.shortSHA'],
-      author: git['local.branch.current.lastCommitAuthor']
+      branch: git['name'],
+      commit: git['shortSHA'],
+      author: git['lastCommitAuthor']
     }
   }
 
@@ -27,11 +29,13 @@ class App extends React.Component {
         <section className='info'>
           <p>Current branch: <b>{ this.state.branch }</b></p>
           <p>Latest commit: <b>{ this.state.commit }</b></p>
-          <p>Last Commit Author: <b>{ this.state.author }</b></p>
+          <p>Last commit author: <b>{ this.state.author }</b></p>
         </section>
       </div>)
   }
 
 }
 
-export default App
+render(
+  (<App />), document.getElementById('content')
+)

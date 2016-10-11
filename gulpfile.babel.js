@@ -9,33 +9,27 @@ import babelify from 'babelify'
 import uglify from 'gulp-uglify'
 import rimraf from 'rimraf'
 import notify from 'gulp-notify'
-import browserSync, { reload } from 'browser-sync'
-import sourcemaps from 'gulp-sourcemaps'
+import gls from 'gulp-live-server'
 import postcss from 'gulp-postcss'
 import rename from 'gulp-rename'
 import nested from 'postcss-nested'
 import vars from 'postcss-simple-vars'
 import extend from 'postcss-simple-extend'
 import cssnano from 'cssnano'
-import htmlReplace from 'gulp-html-replace'
-import imagemin from 'gulp-imagemin'
-import pngquant from 'imagemin-pngquant'
 import runSequence from 'run-sequence'
-import ghPages from 'gulp-gh-pages'
-import gitinfo from 'gulp-gitinfo'
+import gitinfo from './gitinfo'
 import es from 'event-stream'
 import fs from 'fs'
 
 const paths = {
   bundle: 'app.js',
-  entry: 'src/Index.js',
+  entry: 'src/App.js',
   srcCss: 'src/**/*.scss',
   srcImg: 'src/images/**',
   srcLint: 'src/**/*.js',
   dist: 'dist',
   distJs: 'dist/js',
-  distImg: 'dist/images',
-  distDeploy: './dist/**/*'
+  distImg: 'dist/images'
 }
 
 const customOpts = {
@@ -51,15 +45,13 @@ gulp.task('clean', cb => {
   rimraf('dist', cb)
 })
 
-gulp.task('browserSync', () => {
-  let containerUrl = process.env.RUNNABLE_CONTAINER_URL || 'localhost'
-  return browserSync({
-    ui: false,
-    open: false,
-    host: `${containerUrl}`,
-    server: {
-      baseDir: './'
-    }
+gulp.task('serve', () => {
+  let server = gls.static(paths.dist)
+  server.start()
+
+  // use gulp.watch to trigger server actions(notify, start or stop)
+  gulp.watch(['dist/**/*.css', 'dist/**/*.html'], (file) => {
+    server.notify.apply(server, [file])
   })
 })
 
@@ -71,10 +63,7 @@ gulp.task('watchify', () => {
       .on('error', notify.onError())
       .pipe(source(paths.bundle))
       .pipe(buffer())
-      .pipe(sourcemaps.init({ loadMaps: true }))
-      .pipe(sourcemaps.write('.'))
       .pipe(gulp.dest(paths.distJs))
-      .pipe(reload({ stream: true }))
   }
 
   bundler.transform(babelify)
@@ -88,20 +77,23 @@ gulp.task('browserify', () => {
     .bundle()
     .pipe(source(paths.bundle))
     .pipe(buffer())
-    .pipe(sourcemaps.init({ loadMaps: true }))
     .pipe(uglify())
-    .pipe(sourcemaps.write('.'))
     .pipe(gulp.dest(paths.distJs))
 })
 
 gulp.task('styles', () => {
   gulp.src(paths.srcCss)
     .pipe(rename({ extname: '.css' }))
-    .pipe(sourcemaps.init())
     .pipe(postcss([vars, extend, nested, autoprefixer, cssnano]))
-    .pipe(sourcemaps.write('.'))
     .pipe(gulp.dest(paths.dist))
-    .pipe(reload({ stream: true }))
+})
+
+gulp.task('copy', () => {
+  gulp.src('src/index.html')
+    .pipe(gulp.dest(paths.dist))
+
+  gulp.src(paths.srcImg)
+    .pipe(gulp.dest(paths.distImg))
 })
 
 gulp.task('git', () => {
@@ -115,22 +107,6 @@ gulp.task('git', () => {
     }))
 })
 
-gulp.task('htmlReplace', () => {
-  gulp.src('index.html')
-    .pipe(htmlReplace({ css: 'styles/main.css', js: 'js/app.js' }))
-    .pipe(gulp.dest(paths.dist))
-})
-
-gulp.task('images', () => {
-  gulp.src(paths.srcImg)
-    .pipe(imagemin({
-      progressive: true,
-      svgoPlugins: [{ removeViewBox: false }],
-      use: [pngquant()]
-    }))
-    .pipe(gulp.dest(paths.distImg))
-})
-
 gulp.task('lint', () => {
   gulp.src(paths.srcLint)
     .pipe(standard())
@@ -141,18 +117,11 @@ gulp.task('watchTask', () => {
   gulp.watch(paths.srcLint, ['lint'])
 })
 
-gulp.task('deploy', () => {
-  gulp.src(paths.distDeploy)
-    .pipe(ghPages())
-})
-
 gulp.task('watch', cb => {
-  runSequence('clean', ['git', 'browserSync', 'watchTask', 'watchify', 'styles', 'lint', 'images'], cb)
+  runSequence('clean', ['git', 'serve', 'watchTask', 'watchify', 'styles', 'copy', 'lint'], cb)
 })
 
 gulp.task('build', cb => {
   process.env.NODE_ENV = 'production'
-  runSequence('clean', ['git', 'browserify', 'styles', 'htmlReplace', 'images'], cb)
+  runSequence('clean', ['git', 'browserify', 'styles', 'copy'], cb)
 })
-
-gulp.task('serve', ['browserSync'])
