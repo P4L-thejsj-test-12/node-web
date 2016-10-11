@@ -19,8 +19,9 @@ class App extends React.Component {
         <section className='splash'>
           <div className='content'>
             <h2>Hello World!</h2>
+            <h4>Your web application is running!</h4>
             <p>
-              Runnable is a sandbox service that creates <b>full-stack environments</b> for your GitHub branches, so your team can integrate and test more often.
+              Make sure to <b>commit</b> or add a <b>branch</b> to see your changes show up below.
             </p>
           </div>
         </section>
