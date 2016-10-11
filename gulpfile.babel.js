@@ -20,7 +20,6 @@ import { spawn } from 'child_process'
 import es from 'event-stream'
 import fs from 'fs'
 import gitinfo from './gitinfo'
-import server from './server'
 
 const paths = {
   bundle: 'app.js',
@@ -47,7 +46,7 @@ gulp.task('clean', cb => {
 })
 
 gulp.task('serve', () => {
-  spawn('node', server, { stdio: 'inherit' })
+  spawn('node', './server.js', { stdio: 'inherit' })
 })
 
 gulp.task('watchify', () => {
