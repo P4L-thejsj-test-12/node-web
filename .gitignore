@@ -1,3 +1,4 @@
 dist/
 node_modules/
 src/git.json
+npm-debug.log

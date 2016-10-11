@@ -9,7 +9,6 @@ import babelify from 'babelify'
 import uglify from 'gulp-uglify'
 import rimraf from 'rimraf'
 import notify from 'gulp-notify'
-import gls from 'gulp-live-server'
 import postcss from 'gulp-postcss'
 import rename from 'gulp-rename'
 import nested from 'postcss-nested'
@@ -17,9 +16,11 @@ import vars from 'postcss-simple-vars'
 import extend from 'postcss-simple-extend'
 import cssnano from 'cssnano'
 import runSequence from 'run-sequence'
-import gitinfo from './gitinfo'
+import { spawn } from 'child_process'
 import es from 'event-stream'
 import fs from 'fs'
+import gitinfo from './gitinfo'
+import server from './server'
 
 const paths = {
   bundle: 'app.js',
@@ -46,13 +47,7 @@ gulp.task('clean', cb => {
 })
 
 gulp.task('serve', () => {
-  let server = gls.static(paths.dist)
-  server.start()
-
-  // use gulp.watch to trigger server actions(notify, start or stop)
-  gulp.watch(['dist/**/*.css', 'dist/**/*.html'], (file) => {
-    server.notify.apply(server, [file])
-  })
+  spawn('node', server, { stdio: 'inherit' })
 })
 
 gulp.task('watchify', () => {
