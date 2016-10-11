@@ -21,8 +21,7 @@ import htmlReplace from 'gulp-html-replace'
 import imagemin from 'gulp-imagemin'
 import pngquant from 'imagemin-pngquant'
 import runSequence from 'run-sequence'
-import ghPages from 'gulp-gh-pages'
-import gitinfo from 'gulp-gitinfo'
+import gitinfo from './gitinfo'
 import es from 'event-stream'
 import fs from 'fs'
 
@@ -139,11 +138,6 @@ gulp.task('lint', () => {
 gulp.task('watchTask', () => {
   gulp.watch(paths.srcCss, ['styles'])
   gulp.watch(paths.srcLint, ['lint'])
-})
-
-gulp.task('deploy', () => {
-  gulp.src(paths.distDeploy)
-    .pipe(ghPages())
 })
 
 gulp.task('watch', cb => {
