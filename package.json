@@ -16,7 +16,7 @@
     "docker"
   ],
   "scripts": {
-    "postinstall": "gulp build",
+    "prestart": "gulp build",
     "start": "gulp serve",
     "dev": "gulp watch",
     "test": "standard --verbose ./**/*.js"
